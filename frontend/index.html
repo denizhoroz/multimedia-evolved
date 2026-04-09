@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimedia Evolved</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        'primary-hover': '#4f46e5',
+                        surface: '#1e1e2e',
+                        'surface-light': '#2a2a3e',
+                        'surface-lighter': '#363650',
+                        accent: '#a78bfa',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#13131f] text-gray-200 min-h-screen flex">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <!-- Logo -->
+        <div class="px-5 py-5 border-b border-surface-lighter">
+            <div class="flex items-center gap-2">
+                <div class="text-xl">&#9998;</div>
+                <h1 class="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    Multimedia Evolved
+                </h1>
+            </div>
+            <span class="text-[0.65rem] text-gray-500 mt-1 block">Local media toolkit</span>
+        </div>
+
+        <!-- Tab Navigation -->
+        <nav class="flex flex-col py-3">
+            <button class="tab-btn active" data-tab="youtube">
+                <span class="tab-icon">&#9654;</span> Video Download
+            </button>
+            <button class="tab-btn" data-tab="compress">
+                <span class="tab-icon">&#128230;</span> Compress
+            </button>
+            <button class="tab-btn" data-tab="convert">
+                <span class="tab-icon">&#128260;</span> Convert
+            </button>
+            <button class="tab-btn" data-tab="image">
+                <span class="tab-icon">&#128444;</span> Image Tools
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8 overflow-y-auto max-h-screen">
+
+        <!-- Video Download Tab -->
+        <section id="tab-youtube" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">Download Video</h2>
+                <p class="card-desc">Paste a URL from YouTube, Instagram, TikTok, and more.</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="label">Video URL</label>
+                        <input type="text" id="yt-url" class="input" placeholder="https://youtube.com/watch?v=... or Instagram/TikTok link">
+                    </div>
+
+                    <div>
+                        <label class="label">Browser Cookies</label>
+                        <select id="yt-cookies" class="input">
+                            <option value="">None (public content only)</option>
+                            <option value="chrome">Chrome</option>
+                            <option value="firefox">Firefox</option>
+                            <option value="edge">Edge</option>
+                            <option value="brave">Brave</option>
+                            <option value="opera">Opera</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Required for Instagram, private TikTok, and other login-gated content. Reads cookies from your local browser.</p>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="YoutubeModule.getInfo()" class="btn btn-secondary">
+                            Get Info
+                        </button>
+                        <button onclick="YoutubeModule.downloadVideo()" class="btn btn-primary">
+                            Download Video
+                        </button>
+                        <button onclick="YoutubeModule.downloadAudio()" class="btn btn-accent">
+                            Download Audio (MP3)
+                        </button>
+                    </div>
+
+                    <div id="yt-info" class="info-box hidden"></div>
+                    <div id="yt-status" class="status-box hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Compress Tab -->
+        <section id="tab-compress" class="tab-content hidden">
+            <div class="card">
+                <h2 class="card-title">Compress Media</h2>
+                <p class="card-desc">Reduce file size for videos, images, or audio.</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="label">Media Type</label>
+                        <div class="flex gap-2">
+                            <button class="toggle-btn active" data-compress-type="video" onclick="CompressModule.setType('video')">Video</button>
+                            <button class="toggle-btn" data-compress-type="image" onclick="CompressModule.setType('image')">Image</button>
+                            <button class="toggle-btn" data-compress-type="audio" onclick="CompressModule.setType('audio')">Audio</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="label">File</label>
+                        <div class="dropzone" id="compress-dropzone">
+                            <input type="file" id="compress-file" accept="video/*" class="hidden">
+                            <p>Drag & drop a file or <span class="text-primary cursor-pointer underline" onclick="document.getElementById('compress-file').click()">browse</span></p>
+                            <p id="compress-file-name" class="text-sm text-gray-500 mt-1"></p>
+                        </div>
+                    </div>
+
+                    <!-- Video quality -->
+                    <div id="compress-video-opts">
+                        <label class="label">Quality</label>
+                        <select id="compress-quality" class="input">
+                            <option value="high">High (less compression)</option>
+                            <option value="medium" selected>Medium (balanced)</option>
+                            <option value="low">Low (max compression)</option>
+                        </select>
+                    </div>
+
+                    <!-- Image quality -->
+                    <div id="compress-image-opts" class="hidden">
+                        <label class="label">Quality (1-100)</label>
+                        <input type="range" id="compress-img-quality" min="1" max="100" value="70" class="w-full">
+                        <span id="compress-img-quality-val" class="text-sm text-gray-400">70</span>
+                    </div>
+
+                    <!-- Audio bitrate -->
+                    <div id="compress-audio-opts" class="hidden">
+                        <label class="label">Target Bitrate</label>
+                        <select id="compress-bitrate" class="input">
+                            <option value="64k">64 kbps</option>
+                            <option value="96k">96 kbps</option>
+                            <option value="128k" selected>128 kbps</option>
+                        </select>
+                    </div>
+
+                    <button onclick="CompressModule.compress()" class="btn btn-primary">Compress</button>
+                    <div id="compress-status" class="status-box hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Convert Tab -->
+        <section id="tab-convert" class="tab-content hidden">
+            <div class="grid grid-cols-2" style="gap: 2.5rem;">
+
+                <!-- Convert From (Left Box) -->
+                <div class="card">
+                    <h2 class="card-title">Convert From</h2>
+                    <p class="card-desc">Drop a video or audio file to get started.</p>
+
+                    <div class="space-y-4">
+                        <div class="dropzone" id="convert-dropzone">
+                            <input type="file" id="convert-file" accept="video/*,audio/*" class="hidden">
+                            <p>Drag & drop a file or <span class="text-primary cursor-pointer underline" onclick="document.getElementById('convert-file').click()">browse</span></p>
+                            <p id="convert-file-name" class="text-sm text-gray-500 mt-1"></p>
+                        </div>
+
+                        <!-- Detected file info -->
+                        <div id="convert-source-info" class="info-box hidden">
+                            <div class="flex items-center gap-3">
+                                <span id="convert-source-icon" class="text-2xl"></span>
+                                <div>
+                                    <p id="convert-source-name" class="font-semibold text-white text-sm"></p>
+                                    <p id="convert-source-details" class="text-gray-400 text-xs mt-0.5"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Convert To (Right Box) -->
+                <div class="card">
+                    <h2 class="card-title">Convert To</h2>
+                    <p class="card-desc">Choose the output format and settings.</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="label">Detected Type</label>
+                            <div id="convert-detected-type" class="input bg-surface-lighter text-gray-400 cursor-default">
+                                No file selected
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="label">Target Format</label>
+                            <select id="convert-format" class="input" disabled>
+                                <option value="">Select a file first</option>
+                            </select>
+                        </div>
+
+                        <!-- Bitrate (shown for audio targets) -->
+                        <div id="convert-bitrate-group" class="hidden">
+                            <label class="label">Bitrate</label>
+                            <select id="convert-bitrate" class="input">
+                                <option value="128k">128 kbps</option>
+                                <option value="192k" selected>192 kbps</option>
+                                <option value="256k">256 kbps</option>
+                                <option value="320k">320 kbps</option>
+                            </select>
+                        </div>
+
+                        <!-- Estimated output size -->
+                        <div id="convert-size-estimate" class="hidden text-center text-sm py-2 px-3 rounded-lg bg-surface-light border border-surface-lighter">
+                            <span class="text-gray-400">Estimated output size:</span>
+                            <span id="convert-size-value" class="text-white font-semibold ml-1"></span>
+                        </div>
+
+                        <button onclick="ConvertModule.convert()" class="btn btn-primary w-full" disabled id="convert-btn">
+                            Convert
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            <div id="convert-status" class="status-box hidden" style="margin-top: 2rem;"></div>
+        </section>
+
+        <!-- Image Tools Tab -->
+        <section id="tab-image" class="tab-content hidden">
+            <div class="card">
+                <h2 class="card-title">Image Tools</h2>
+                <p class="card-desc">Resize, crop, and rotate images.</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="label">Image File</label>
+                        <div class="dropzone" id="image-dropzone">
+                            <input type="file" id="image-file" accept="image/*" class="hidden">
+                            <p>Drag & drop an image or <span class="text-primary cursor-pointer underline" onclick="document.getElementById('image-file').click()">browse</span></p>
+                            <p id="image-file-name" class="text-sm text-gray-500 mt-1"></p>
+                        </div>
+                    </div>
+
+                    <div id="image-preview-container" class="hidden">
+                        <img id="image-preview" class="max-h-64 rounded-lg border border-surface-lighter mx-auto">
+                        <p id="image-info-text" class="text-sm text-gray-400 text-center mt-2"></p>
+                    </div>
+
+                    <div>
+                        <label class="label">Action</label>
+                        <div class="flex gap-2">
+                            <button class="toggle-btn active" data-image-action="resize" onclick="ImageModule.setAction('resize')">Resize</button>
+                            <button class="toggle-btn" data-image-action="crop" onclick="ImageModule.setAction('crop')">Crop</button>
+                            <button class="toggle-btn" data-image-action="rotate" onclick="ImageModule.setAction('rotate')">Rotate</button>
+                        </div>
+                    </div>
+
+                    <!-- Resize options -->
+                    <div id="image-resize-opts">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="label">Width (px)</label>
+                                <input type="number" id="resize-width" class="input" placeholder="1920">
+                            </div>
+                            <div>
+                                <label class="label">Height (px)</label>
+                                <input type="number" id="resize-height" class="input" placeholder="1080">
+                            </div>
+                        </div>
+                        <label class="flex items-center gap-2 mt-2 text-sm">
+                            <input type="checkbox" id="resize-aspect" checked class="accent-primary">
+                            Keep aspect ratio
+                        </label>
+                    </div>
+
+                    <!-- Crop options -->
+                    <div id="image-crop-opts" class="hidden">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="label">Left (px)</label>
+                                <input type="number" id="crop-left" class="input" value="0">
+                            </div>
+                            <div>
+                                <label class="label">Top (px)</label>
+                                <input type="number" id="crop-top" class="input" value="0">
+                            </div>
+                            <div>
+                                <label class="label">Right (px)</label>
+                                <input type="number" id="crop-right" class="input" placeholder="Width">
+                            </div>
+                            <div>
+                                <label class="label">Bottom (px)</label>
+                                <input type="number" id="crop-bottom" class="input" placeholder="Height">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rotate options -->
+                    <div id="image-rotate-opts" class="hidden">
+                        <label class="label">Angle (degrees)</label>
+                        <input type="number" id="rotate-angle" class="input" value="90" step="1">
+                        <div class="flex gap-2 mt-2">
+                            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rotate-angle').value='90'">90</button>
+                            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rotate-angle').value='180'">180</button>
+                            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rotate-angle').value='270'">270</button>
+                        </div>
+                    </div>
+
+                    <button onclick="ImageModule.process()" class="btn btn-primary">Process Image</button>
+                    <div id="image-status" class="status-box hidden"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- Scripts -->
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/tabs.js"></script>
+    <script src="/static/js/youtube.js"></script>
+    <script src="/static/js/compress.js"></script>
+    <script src="/static/js/convert.js"></script>
+    <script src="/static/js/image.js"></script>
+</body>
+</html>
