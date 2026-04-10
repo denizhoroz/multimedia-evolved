@@ -5,20 +5,17 @@ import yt_dlp
 from backend.utils.files import OUTPUT_DIR
 
 
-def _base_opts(cookies_browser: str | None = None) -> dict:
+def _base_opts() -> dict:
     """Build common yt-dlp options."""
-    opts = {
+    return {
         "outtmpl": os.path.join(OUTPUT_DIR, "%(title)s.%(ext)s"),
         "noplaylist": True,
     }
-    if cookies_browser:
-        opts["cookiesfrombrowser"] = (cookies_browser,)
-    return opts
 
 
-def download_video(url: str, format_choice: str = "best", cookies_browser: str | None = None) -> dict:
+def download_video(url: str, format_choice: str = "best") -> dict:
     """Download a video from YouTube or other supported sites."""
-    ydl_opts = _base_opts(cookies_browser)
+    ydl_opts = _base_opts()
     ydl_opts["format"] = format_choice
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -34,9 +31,9 @@ def download_video(url: str, format_choice: str = "best", cookies_browser: str |
     }
 
 
-def download_audio_only(url: str, cookies_browser: str | None = None) -> dict:
+def download_audio_only(url: str) -> dict:
     """Download only the audio from a video URL."""
-    ydl_opts = _base_opts(cookies_browser)
+    ydl_opts = _base_opts()
     ydl_opts["format"] = "bestaudio/best"
     ydl_opts["postprocessors"] = [{
         "key": "FFmpegExtractAudio",
@@ -58,11 +55,9 @@ def download_audio_only(url: str, cookies_browser: str | None = None) -> dict:
     }
 
 
-def get_video_info(url: str, cookies_browser: str | None = None) -> dict:
+def get_video_info(url: str) -> dict:
     """Get video info without downloading."""
     ydl_opts = {"noplaylist": True}
-    if cookies_browser:
-        ydl_opts["cookiesfrombrowser"] = (cookies_browser,)
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)

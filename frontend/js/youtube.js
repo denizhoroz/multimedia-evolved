@@ -3,25 +3,6 @@
  */
 
 const YoutubeModule = {
-    async init() {
-        try {
-            const res = await fetch("/api/detect-browser");
-            const data = await res.json();
-            const select = document.getElementById("yt-cookies");
-
-            if (data.default) {
-                select.value = data.default;
-            }
-        } catch {
-            // Silently fall back to "None"
-        }
-    },
-
-    getCookiesBrowser() {
-        const val = document.getElementById("yt-cookies").value;
-        return val || null;
-    },
-
     async getInfo() {
         const url = document.getElementById("yt-url").value.trim();
         if (!url) return;
@@ -33,10 +14,7 @@ const YoutubeModule = {
         hideStatus(infoBox);
 
         try {
-            const res = await API.postJSON("/api/youtube/info", {
-                url,
-                cookies_browser: this.getCookiesBrowser(),
-            });
+            const res = await API.postJSON("/api/youtube/info", { url });
             const data = await res.json();
 
             infoBox.classList.remove("hidden");
@@ -67,7 +45,6 @@ const YoutubeModule = {
             const res = await API.postJSON("/api/youtube/download", {
                 url,
                 format: "best",
-                cookies_browser: this.getCookiesBrowser(),
             });
             const blob = await res.blob();
             const filename = getFilenameFromResponse(res) || "video.mp4";
@@ -86,10 +63,7 @@ const YoutubeModule = {
         showStatus(statusBox, "loading", "Downloading audio... this may take a moment.");
 
         try {
-            const res = await API.postJSON("/api/youtube/download-audio", {
-                url,
-                cookies_browser: this.getCookiesBrowser(),
-            });
+            const res = await API.postJSON("/api/youtube/download-audio", { url });
             const blob = await res.blob();
             const filename = getFilenameFromResponse(res) || "audio.mp3";
             downloadBlob(blob, filename);
@@ -99,5 +73,3 @@ const YoutubeModule = {
         }
     },
 };
-
-document.addEventListener("DOMContentLoaded", () => YoutubeModule.init());
